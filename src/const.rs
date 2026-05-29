@@ -1,3 +1,5 @@
+pub const PREFIX: &str = "FAN";
+
 pub const ABBREVIATION: &str = "Abbreviation";
 pub const COMMON: &str = "Common";
 pub const ERASE: &str = "Erase";

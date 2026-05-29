@@ -1,5 +1,5 @@
 use crate::{
-    r#const::{ABBREVIATION, COMMON, ERASE, IUPAC, NAME},
+    r#const::{ABBREVIATION, COMMON, ERASE, IUPAC, NAME, PREFIX},
     egui::names::Names,
 };
 use const_format::formatcp;
@@ -24,9 +24,9 @@ impl Writable<'_> {
         response.context_menu(|ui| {
             let id = self.id;
 
-            let abbreviation = ui.try_localize(&format!("{id}.{}", ABBREVIATION.to_lowercase()));
+            let abbreviation = ui.try_localize(&format!("{id}.abbreviation"));
             ui.add_enabled_ui(abbreviation.is_some(), |ui| {
-                let mut atom = RichText::new(ui.localize(ABBREVIATION));
+                let mut atom = RichText::new(ui.localize(formatcp!("{PREFIX}_{ABBREVIATION}")));
                 if matches!(&abbreviation, Some(abbreviation) if self.text == abbreviation) {
                     atom = atom.strong();
                 }
@@ -38,10 +38,11 @@ impl Writable<'_> {
                 }
             });
 
-            let common = ui.try_localize(&format!("{id}.{}", COMMON.to_lowercase()));
+            let common = ui.try_localize(&format!("{id}.common"));
             ui.add_enabled_ui(common.is_some(), |ui| {
-                let mut atom =
-                    RichText::new(ui.localize(formatcp!("{COMMON}{NAME}?PluralCategory=one")));
+                let mut atom = RichText::new(
+                    ui.localize(formatcp!("{PREFIX}_{COMMON}{NAME}?PluralCategory=one")),
+                );
                 if matches!(&common, Some(common) if self.text == common) {
                     atom = atom.strong();
                 }
@@ -53,10 +54,11 @@ impl Writable<'_> {
                 }
             });
 
-            let iupac = ui.try_localize(&format!("{id}.{}", IUPAC.to_lowercase()));
+            let iupac = ui.try_localize(&format!("{id}.iupac"));
             ui.add_enabled_ui(iupac.is_some(), |ui| {
-                let mut atom =
-                    RichText::new(ui.localize(formatcp!("{IUPAC}{NAME}?PluralCategory=one")));
+                let mut atom = RichText::new(
+                    ui.localize(formatcp!("{PREFIX}_{IUPAC}{NAME}?PluralCategory=one")),
+                );
                 if matches!(&iupac, Some(iupac) if self.text == iupac) {
                     atom = atom.strong();
                 }
@@ -68,7 +70,10 @@ impl Writable<'_> {
                 }
             });
 
-            if ui.button((ERASER, ui.localize(ERASE))).clicked() {
+            if ui
+                .button((ERASER, ui.localize(formatcp!("{PREFIX}_{ERASE}"))))
+                .clicked()
+            {
                 *self.text = String::new();
                 changed = true;
             }
