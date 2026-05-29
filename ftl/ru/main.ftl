@@ -1,0 +1,10 @@
+Abbreviation = Аббревиатура
+Common = Общие
+CommonName = Общее название
+CommonNames = Общие названия
+Erase = Стереть
+Iupac = IUPAC
+IupacName = Название по IUPAC
+IupacNames = Названия по IUPAC
+Name = Название
+Names = Названия

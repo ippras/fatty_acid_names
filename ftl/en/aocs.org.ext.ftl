@@ -1,0 +1,12 @@
+c16c0c0 =
+    .iupac = (0Z,0Z)-hexadeca-0,0-dienoic
+c16c7c10 =
+    .iupac = (7Z,10Z)-hexadeca-7,10-dienoic
+c16c9c12 =
+    .iupac = (9Z,12Z)-hexadeca-9,12-dienoic
+c16c4c7c10c13 =
+    .iupac = (4Z,7Z,10Z,13Z)-hexadeca-4,7,10,13-tetraenoic
+c22c15 =
+    .iupac = (15Z)-docos-15-enoic
+c22c13c16 =
+    .iupac = (13Z,16Z)-docos-13,16-dienoic
