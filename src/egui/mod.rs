@@ -1,4 +1,4 @@
-pub use crate::egui::names::Names;
+pub use self::names::Names;
 
 use crate::egui::{
     readable::{Readable, ReadableBuilder},
