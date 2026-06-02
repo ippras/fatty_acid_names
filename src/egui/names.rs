@@ -1,7 +1,7 @@
 use crate::r#const::{ABBREVIATION, COMMON, IUPAC, NAMES, PREFIX};
 use const_format::formatcp;
 use egui::{Grid, Response, Ui, Widget};
-use egui_l10n::UiExt as _;
+use egui_l10n::ContextExt as _;
 use typed_builder::TypedBuilder;
 
 /// Names widget

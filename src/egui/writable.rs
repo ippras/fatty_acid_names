@@ -4,7 +4,7 @@ use crate::{
 };
 use const_format::formatcp;
 use egui::{Response, RichText, Ui, Widget};
-use egui_l10n::UiExt as _;
+use egui_l10n::ContextExt as _;
 use egui_phosphor::regular::{ERASER, PENCIL};
 use typed_builder::TypedBuilder;
 
