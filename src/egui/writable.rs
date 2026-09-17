@@ -55,7 +55,7 @@ impl Writable<'_> {
                 }
             });
 
-            let mut atom = RichText::new(self.fatty_acid.iupac());
+            let mut atom = RichText::new(self.fatty_acid.iupac().to_string());
             if matches!(&iupac, Some(iupac) if self.text == iupac) {
                 atom = atom.strong();
             }
@@ -79,7 +79,7 @@ impl Writable<'_> {
         }
         if self.hover {
             response = response.on_hover_ui(|ui| {
-                Names::builder().id(self.id).build().ui(ui);
+                Names::builder().fatty_acid(self.fatty_acid).build().ui(ui);
             });
         }
         response
