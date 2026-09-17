@@ -55,13 +55,12 @@ impl Writable<'_> {
                 }
             });
 
-            let mut atom = RichText::new(self.fatty_acid.iupac().to_string());
-            if matches!(&iupac, Some(iupac) if self.text == iupac) {
+            let mut iupac = self.fatty_acid.iupac().to_string();
+            let mut atom = RichText::new(iupac);
+            if self.text == iupac {
                 atom = atom.strong();
             }
-            if ui.button((PENCIL, atom)).clicked()
-                && let Some(iupac) = iupac
-            {
+            if ui.button((PENCIL, atom)).clicked() {
                 *self.text = iupac;
                 changed = true;
             }
