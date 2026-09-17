@@ -56,7 +56,8 @@ impl Writable<'_> {
             });
 
             let mut iupac = self.fatty_acid.iupac().to_string();
-            let mut atom = RichText::new(&iupac);
+            let mut atom =
+                RichText::new(ui.localize(formatcp!("{PREFIX}_{IUPAC}{NAME}?PluralCategory=one")));
             if *self.text == iupac {
                 atom = atom.strong();
             }
