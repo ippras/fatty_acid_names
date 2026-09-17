@@ -19,11 +19,11 @@ pub fn format_iupac(carbons: u8, mut unsaturations: Vec<Unsaturated>) -> String 
         // Считаем количество двойных и тройных связей
         let ene_count = unsaturations
             .iter()
-            .filter(|u| !u.triple.unwrap_or(false))
+            .filter(|unsaturation| unsaturation.triple.is_some_and(|triple| !triple))
             .count();
         let yne_count = unsaturations
             .iter()
-            .filter(|u| u.triple.unwrap_or(false))
+            .filter(|unsaturation| unsaturation.triple.is_some_and(|triple| triple))
             .count();
 
         // 2. Формируем префикс стереохимии (например: "(6Z,9Z,12Z)-")
