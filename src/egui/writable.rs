@@ -57,7 +57,7 @@ impl Writable<'_> {
 
             let mut iupac = self.fatty_acid.iupac().to_string();
             let mut atom = RichText::new(iupac);
-            if self.text == iupac {
+            if *self.text == iupac {
                 atom = atom.strong();
             }
             if ui.button((PENCIL, atom)).clicked() {
