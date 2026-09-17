@@ -6,12 +6,13 @@ use const_format::formatcp;
 use egui::{Response, RichText, Ui, Widget};
 use egui_l10n::ContextExt as _;
 use egui_phosphor::regular::{ERASER, PENCIL};
+use lipid::r#struct::fatty_acid::FattyAcid;
 use typed_builder::TypedBuilder;
 
 /// Writable name widget
 #[derive(TypedBuilder)]
 pub struct Writable<'a> {
-    id: &'a str,
+    fatty_acid: &'a FattyAcid,
     text: &'a mut String,
     #[builder(default = true)]
     hover: bool,
@@ -22,7 +23,7 @@ impl Writable<'_> {
         let mut response = ui.text_edit_singleline(self.text);
         let mut changed = false;
         response.context_menu(|ui| {
-            let id = self.id;
+            let id = self.fatty_acid.id();
 
             let abbreviation = ui.try_localize(&format!("{id}.abbreviation"));
             ui.add_enabled_ui(abbreviation.is_some(), |ui| {
@@ -54,21 +55,16 @@ impl Writable<'_> {
                 }
             });
 
-            let iupac = ui.try_localize(&format!("{id}.iupac"));
-            ui.add_enabled_ui(iupac.is_some(), |ui| {
-                let mut atom = RichText::new(
-                    ui.localize(formatcp!("{PREFIX}_{IUPAC}{NAME}?PluralCategory=one")),
-                );
-                if matches!(&iupac, Some(iupac) if self.text == iupac) {
-                    atom = atom.strong();
-                }
-                if ui.button((PENCIL, atom)).clicked()
-                    && let Some(iupac) = iupac
-                {
-                    *self.text = iupac;
-                    changed = true;
-                }
-            });
+            let mut atom = RichText::new(self.fatty_acid.iupac());
+            if matches!(&iupac, Some(iupac) if self.text == iupac) {
+                atom = atom.strong();
+            }
+            if ui.button((PENCIL, atom)).clicked()
+                && let Some(iupac) = iupac
+            {
+                *self.text = iupac;
+                changed = true;
+            }
 
             if ui
                 .button((ERASER, ui.localize(formatcp!("{PREFIX}_{ERASE}"))))

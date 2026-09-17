@@ -18,5 +18,3 @@ pub mod l10n {
 pub mod r#const;
 #[cfg(feature = "egui")]
 pub mod egui;
-// #[cfg(feature = "lipid")]
-// pub mod iupac;

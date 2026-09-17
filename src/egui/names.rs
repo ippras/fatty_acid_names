@@ -2,20 +2,21 @@ use crate::r#const::{ABBREVIATION, COMMON, IUPAC, NAMES, PREFIX};
 use const_format::formatcp;
 use egui::{Grid, Response, Ui, Widget};
 use egui_l10n::ContextExt as _;
+use lipid::r#struct::fatty_acid::FattyAcid;
 use typed_builder::TypedBuilder;
 
 /// Names widget
 #[derive(TypedBuilder)]
 pub struct Names<'a> {
-    id: &'a str,
+    fatty_acid: &'a FattyAcid,
 }
 
 impl Widget for Names<'_> {
     fn ui(self, ui: &mut Ui) -> Response {
-        let id = self.id;
         ui.heading(ui.localize(formatcp!("{PREFIX}_{NAMES}")));
         Grid::new(ui.next_auto_id())
             .show(ui, |ui| {
+                let id = self.fatty_acid.id().to_string();
                 if let Some(abbreviation) = ui.try_localize(&format!("{id}.abbreviation")) {
                     ui.label(ui.localize(formatcp!("{PREFIX}_{ABBREVIATION}")));
                     ui.label(abbreviation);
@@ -31,11 +32,9 @@ impl Widget for Names<'_> {
                     }
                     ui.end_row();
                 }
-                if let Some(iupac) = ui.try_localize(&format!("{id}.iupac")) {
-                    ui.label(ui.localize(formatcp!("{PREFIX}_{IUPAC}")));
-                    ui.label(iupac);
-                    ui.end_row();
-                }
+                ui.label(ui.localize(formatcp!("{PREFIX}_{IUPAC}")));
+                ui.label(self.fatty_acid.iupac());
+                ui.end_row();
             })
             .response
     }

@@ -1,11 +1,12 @@
 use crate::egui::names::Names;
 use egui::{Label, Response, Ui, Widget};
+use lipid::r#struct::fatty_acid::FattyAcid;
 use typed_builder::TypedBuilder;
 
 /// Readable name widget
 #[derive(TypedBuilder)]
 pub struct Readable<'a> {
-    id: &'a str,
+    fatty_acid: &'a FattyAcid,
     text: &'a str,
     #[builder(default = true)]
     hover: bool,
@@ -22,7 +23,7 @@ impl Readable<'_> {
         let mut response = label.ui(ui);
         if self.hover {
             response = response.on_hover_ui(|ui| {
-                Names::builder().id(self.id).build().ui(ui);
+                Names::builder().fatty_acid(self.fatty_acid).build().ui(ui);
             });
         }
         response
