@@ -1,4 +1,7 @@
-use std::fmt::{self, Formatter, from_fn};
+use std::{
+    convert::identity,
+    fmt::{Display, from_fn},
+};
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Unsaturated {
@@ -11,103 +14,8 @@ pub fn format_iupac(carbons: u8, mut unsaturations: Vec<Unsaturated>) -> String 
     // Сортируем связи по индексу (локанту) для правильного порядка
     unsaturations.sort_by_key(|u| u.index);
 
-    // Используем from_fn для формирования строки "на лету", без промежуточных Vec и String
-    let display = from_fn(move |f| {
-        // 1. Определяем корень
-        let root = format_carbons(carbons);
-
-        // Считаем количество двойных и тройных связей
-        let ene_count = unsaturations
-            .iter()
-            .filter(|u| !u.triple.unwrap_or(false))
-            .count();
-        let yne_count = unsaturations
-            .iter()
-            .filter(|u| u.triple.unwrap_or(false))
-            .count();
-
-        // 2. Формируем префикс стереохимии (например: "(6Z,9Z,12Z)-")
-        let mut stereo_iter = unsaturations
-            .iter()
-            .filter_map(|u| Some((u.index?, u.parity?)))
-            .peekable();
-
-        if stereo_iter.peek().is_some() {
-            write!(f, "(")?;
-            let mut first = true;
-            for (index, parity) in stereo_iter {
-                if !first {
-                    write!(f, ",")?;
-                }
-                let p = if parity { 'E' } else { 'Z' };
-                write!(f, "{index}{p}")?;
-                first = false;
-            }
-            write!(f, ")-")?;
-        }
-
-        // Если связей нет — это насыщенная кислота
-        if ene_count == 0 && yne_count == 0 {
-            return write!(f, "{root}anoic");
-        }
-
-        // 3. Добавляем корень и соединительную 'a'
-        let a = if ene_count > 1 || (ene_count == 0 && yne_count > 1) {
-            "a"
-        } else {
-            ""
-        };
-        write!(f, "{root}{a}")?;
-
-        // Вспомогательное замыкание для форматирования локантов (например: "-6,9,12-")
-        let write_locants = |f: &mut Formatter<'_>, is_triple: bool| -> fmt::Result {
-            let mut locants_iter = unsaturations
-                .iter()
-                .filter(|u| u.triple.unwrap_or(false) == is_triple)
-                .filter_map(|u| u.index)
-                .peekable();
-
-            if locants_iter.peek().is_some() {
-                write!(f, "-")?;
-                let mut first = true;
-                for idx in locants_iter {
-                    if !first {
-                        write!(f, ",")?;
-                    }
-                    write!(f, "{idx}")?;
-                    first = false;
-                }
-                write!(f, "-")?;
-            }
-            Ok(())
-        };
-
-        // 4. Добавляем двойные связи (ene)
-        if ene_count > 0 {
-            write_locants(f, false)?;
-            write!(f, "{}", format_multiplier(ene_count))?;
-            if yne_count > 0 {
-                write!(f, "en")?; // Если дальше идут тройные связи
-            } else {
-                write!(f, "enoic")?;
-            }
-        }
-
-        // 5. Добавляем тройные связи (yne)
-        if yne_count > 0 {
-            write_locants(f, true)?;
-            write!(f, "{}ynoic", format_multiplier(yne_count))?;
-        }
-
-        Ok(())
-    });
-
-    // Превращаем наш from_fn в итоговую строку за одну аллокацию
-    display.to_string()
-}
-
-pub fn format_carbons(n: u8) -> &'static str {
-    match n {
+    // 1. Определяем корень по количеству атомов углерода
+    let root = match carbons {
         1 => "meth",
         2 => "eth",
         3 => "prop",
@@ -148,14 +56,87 @@ pub fn format_carbons(n: u8) -> &'static str {
         38 => "octatriacont",
         39 => "nonatriacont",
         40 => "tetracont",
-        _ => unimplemented!(),
+        _ => "unknown",
+    };
+
+    let mut enes = Vec::new();
+    let mut ynes = Vec::new();
+    let mut stereo = Vec::new();
+
+    // 2. Разделяем двойные и тройные связи, собираем стереохимию
+    for unsaturation in &unsaturations {
+        if unsaturation.triple.is_some_and(identity) {
+            ynes.push(unsaturation.index);
+        } else {
+            enes.push(unsaturation.index);
+        }
+
+        if let (Some(index), Some(parity)) = (unsaturation.index, unsaturation.parity) {
+            // Считаем true -> E (транс), false -> Z (цис)
+            let parity = if parity { "E" } else { "Z" };
+            stereo.push(format!("{index}{parity}"));
+        }
     }
+
+    // Формируем префикс стереохимии, например: "(6Z,9Z,12Z)-"
+    let prefix = if stereo.is_empty() {
+        String::new()
+    } else {
+        format!("({})-", stereo.join(","))
+    };
+
+    let ene_count = enes.len();
+    let yne_count = ynes.len();
+
+    // Если связей нет — это насыщенная кислота
+    if ene_count == 0 && yne_count == 0 {
+        return format!("{prefix}{root}anoic");
+    }
+
+    // 3. Добавляем соединительную 'a', если первый множитель начинается с согласной (di, tri, tetra...)
+    let a = if ene_count > 1 || (ene_count == 0 && yne_count > 1) {
+        "a"
+    } else {
+        ""
+    };
+
+    let ene_locants = format_locants(&enes);
+    let yne_locants = format_locants(&ynes);
+
+    let mut name = format!("{prefix}{root}{a}");
+
+    // 4. Добавляем двойные связи (ene)
+    if ene_count > 0 {
+        let multiplier = format_multiplier(ene_count);
+        name.push_str(&ene_locants);
+        name.push_str(&multiplier);
+        if yne_count > 0 {
+            name.push_str("en"); // Если дальше идут тройные связи
+        } else {
+            name.push_str("enoic");
+        }
+    }
+
+    // 5. Добавляем тройные связи (yne)
+    if yne_count > 0 {
+        let multiplier = format_multiplier(yne_count);
+        if !(ene_count > 0 && yne_locants.is_empty()) {
+            name.push_str(&yne_locants);
+        }
+        name.push_str(&multiplier);
+        name.push_str("ynoic");
+    }
+
+    // Убираем возможные двойные дефисы (на всякий случай)
+    // name.replace("--", "-")
+    name
 }
 
 /// Вспомогательная функция для множителей ИЮПАК (IUPAC P-14.2.1).
+///
+/// [MULTIPLICATIVE PREFIXES](https://iupac.qmul.ac.uk/BlueBook/P1.html#1402)
 pub fn format_multiplier(n: usize) -> &'static str {
     match n {
-        1 => "",
         2 => "di",
         3 => "tri",
         4 => "tetra",
@@ -166,6 +147,19 @@ pub fn format_multiplier(n: usize) -> &'static str {
         9 => "nona",
         10 => "deca",
         _ => unimplemented!(),
+    }
+}
+
+/// Вспомогательная функция для форматирования локантов (например: "-6,9,12-")
+pub fn format_locants(indices: &[Option<u8>]) -> String {
+    let valid: Vec<_> = indices
+        .iter()
+        .filter_map(|&index| Some(index?.to_string()))
+        .collect();
+    if valid.is_empty() {
+        String::new()
+    } else {
+        format!("-{}-", valid.join(","))
     }
 }
 
