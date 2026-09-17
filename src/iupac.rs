@@ -1,15 +1,16 @@
+use lipid::r#struct::fatty_acid::FattyAcid;
 use std::fmt::{self, Formatter, from_fn};
 
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
-pub struct Unsaturated {
-    pub index: Option<u8>,
-    pub triple: Option<bool>,
-    pub parity: Option<bool>,
-}
+// #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
+// pub struct Unsaturated {
+//     pub index: Option<u8>,
+//     pub triple: Option<bool>,
+//     pub parity: Option<bool>,
+// }
 
-pub fn format_iupac(carbons: u8, mut unsaturations: Vec<Unsaturated>) -> String {
+pub fn format_iupac(fatty_acid: FattyAcid) -> String {
     // Сортируем связи по индексу (локанту) для правильного порядка
-    unsaturations.sort_by_key(|u| u.index);
+    fatty_acid.unsaturated.sort_by_key(|u| u.index);
 
     // Используем from_fn для формирования строки "на лету", без промежуточных Vec и String
     let display = from_fn(move |f| {
@@ -17,17 +18,20 @@ pub fn format_iupac(carbons: u8, mut unsaturations: Vec<Unsaturated>) -> String 
         let root = format_carbons(carbons);
 
         // Считаем количество двойных и тройных связей
-        let ene_count = unsaturations
+        let ene_count = fatty_acid
+            .unsaturated
             .iter()
             .filter(|unsaturation| unsaturation.triple.is_some_and(|triple| !triple))
             .count();
-        let yne_count = unsaturations
+        let yne_count = fatty_acid
+            .unsaturated
             .iter()
             .filter(|unsaturation| unsaturation.triple.is_some_and(|triple| triple))
             .count();
 
         // 2. Формируем префикс стереохимии (например: "(6Z,9Z,12Z)-")
-        let mut stereo_iter = unsaturations
+        let mut stereo_iter = fatty_acid
+            .unsaturated
             .iter()
             .filter_map(|u| Some((u.index?, u.parity?)))
             .peekable();
@@ -61,7 +65,8 @@ pub fn format_iupac(carbons: u8, mut unsaturations: Vec<Unsaturated>) -> String 
 
         // Вспомогательное замыкание для форматирования локантов (например: "-6,9,12-")
         let write_locants = |f: &mut Formatter<'_>, is_triple: bool| -> fmt::Result {
-            let mut locants_iter = unsaturations
+            let mut locants_iter = fatty_acid
+                .unsaturated
                 .iter()
                 .filter(|u| u.triple.unwrap_or(false) == is_triple)
                 .filter_map(|u| u.index)
@@ -237,9 +242,9 @@ mod test {
     #[test]
     fn c20u3c8c11c14() {
         assert_eq!(
-            format_iupac(
-                20,
-                vec![
+            format_iupac(FattyAcid {
+                carbon: 20,
+                unsaturated: vec![
                     Unsaturated {
                         index: Some(8),
                         triple: Some(false),
@@ -256,7 +261,7 @@ mod test {
                         parity: Some(false),
                     },
                 ],
-            ),
+            }),
             "(8Z,11Z,14Z)-icosa-8,11,14-trienoic"
         );
     }
@@ -264,9 +269,9 @@ mod test {
     #[test]
     fn c20u3c5c8c11c14() {
         assert_eq!(
-            format_iupac(
-                20,
-                vec![
+            format_iupac(FattyAcid {
+                carbon: 20,
+                unsaturated: vec![
                     Unsaturated {
                         index: Some(5),
                         triple: Some(false),
@@ -288,7 +293,7 @@ mod test {
                         parity: Some(false),
                     },
                 ],
-            ),
+            }),
             "(5Z,8Z,11Z,14Z)-icosa-5,8,11,14-tetraenoic"
         );
     }
@@ -296,9 +301,9 @@ mod test {
     #[test]
     fn c18u3c6c9c12() {
         assert_eq!(
-            format_iupac(
-                18,
-                vec![
+            format_iupac(FattyAcid {
+                carbon: 18,
+                unsaturated: vec![
                     Unsaturated {
                         index: Some(6),
                         triple: Some(false),
@@ -315,7 +320,7 @@ mod test {
                         parity: Some(false),
                     },
                 ],
-            ),
+            }),
             "(6Z,9Z,12Z)-octadeca-6,9,12-trienoic"
         );
     }
