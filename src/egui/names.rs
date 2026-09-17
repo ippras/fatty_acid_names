@@ -33,7 +33,7 @@ impl Widget for Names<'_> {
                     ui.end_row();
                 }
                 ui.label(ui.localize(formatcp!("{PREFIX}_{IUPAC}")));
-                ui.label(self.fatty_acid.iupac());
+                ui.label(self.fatty_acid.iupac().to_string());
                 ui.end_row();
             })
             .response
